@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<!-- left side -->
+<div class="rg_left"><p>UPLOAD A FILE</p>
+</div>
+<!--middle side-->
+<script th:src="@{/user/static/js/jquery-3.4.1.min.js}"></script>
+<script type="text/javascript" th:src="@{/user/static/js/moment.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+<script th:src="@{/user/static/js/bootstrap.min.js}"></script>
+<!--<script th:src="@{/user/static/js/bootstrap.bundle.js}"></script>-->
+<link rel="stylesheet" th:href="@{/user/static/css/bootstrap.min.css}">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
+<script></script>
+<button class="rg_left btn btn-outline-secondary" onclick="window.location.href='https://localhost/user/page/profile'">GO BACK
+</button>
+<div class="rg_center">
+    <!--     upload form start-->
+    <form th:action="'javascript:submit();'" method="post" id="fileForm" class="rg_layout">
+        <table>
+            <tr>
+                <td class="td_left"><label for="username">author</label></td>
+                <td class="td_right"><input class="form-control" id="username" name="username" type="text"
+                                            th:value="${user.username}"
+                                            th:aria-label="${user.username}" readonly></td>
+            </tr>
+            <tr>
+                <td class="td_left"><label for="title">title</label></td>
+                <td class="td_right">
+                    <div class="mb-3">
+                        <textarea class="form-control" id="title" name="title" rows="1"
+                                  placeholder="document title"></textarea>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="td_left"><label>select sections</label></td>
+                <td class="td_right">
+                    <select class="selectpicker" multiple aria-label="section" data-live-search="true" id="section">
+                        <option th:sectionId="${section.id}" th:each="section : ${sectionList}">
+                            [[${section.sectionName}]]
+                        </option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td class="td_left"><label>select a tag</label></td>
+                <td class="td_right">
+                    <select class="selectpicker" aria-label="tag" data-live-search="true" id="tag">
+                        <option th:tagId="${tag.id}" th:each="tag : ${tagList}">[[${tag.tagName}]]</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td class="td_left"><label for="description">description</label></td>
+                <td class="td_right">
+                    <div class="mb-3">
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="td_left">upload your cover</td>
+                <td class="td_right">
+                    <div class="input-group mb-3">
+                        <input type="file" class="form-control" id="cover">
+                        <label class="input-group-text" for="cover"
+                               accept="image/gif,image/png,image/jpeg,image/jpg"
+                        >[OPTIONAL]</label>
+                        <br/>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="td_left">upload ONE file</td>
+                <td class="td_right">
+                    <div class="input-group mb-3">
+                        <input type="file" class="form-control" id="file">
+                        <label class="input-group-text" for="file">[REQUIRED]</label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" align="center"><input type="submit" id="btn_sub" value="upload"></td>
+            </tr>
+        </table>
+    </form>
+</div>
+<script type="text/javascript">
+    function submit() {
+        $("#btn_sub").attr("disabled", true)
+        var sections = $('#section option:selected');
+        var sectionIds = [];
+        $(sections).each(function(index, section){
+            sectionIds.push([$(this).attr("sectionId")]);
+        });
+        var book = {}
+        $.each($("#fileForm").serializeArray(), function (i, item) {
+            book[item.name] = item.value
+        })
+        book['tagId'] = $('#tag').find("option:selected").attr("tagId")
+        $('input[type=file]').change(function () {
+            console.log(this.files[0].mozFullPath);
+        });
+        if (!$("#file")[0].files[0] || !book['title'] || !book['tagId'] || sectionIds.length === 0) {
+            $("#btn_sub").attr("disabled", false)
+            alert("must fill all required fields!")
+            return;
+        }
+        var formData = new FormData();
+        formData.append("cover", $("#cover")[0].files[0])
+        formData.append("file", $("#file")[0].files[0])
+
+        $.ajax({
+            type: "post",
+            url: "/rest/user/uploadFile",
+            data: formData,
+            contentType: false,
+            processData: false,
+            cache: false,
+            enctype: "multipart/form-data",
+            success: function (resp) {
+                book['source'] = resp.data.map.file.url
+                book['sourceKeyname'] = resp.data.map.file.keyname
+                book['cover'] = resp.data.map.cover === undefined ? undefined : resp.data.map.cover.url
+                book['coverKeyname'] = resp.data.map.cover === undefined ? undefined : resp.data.map.cover.keyname
+                $.ajax({
+                    type: "post",
+                    url: "/rest/user/saveBook",
+                    data: JSON.stringify({book, sectionIds}),
+                    contentType: "application/json",
+                    success: function (resp) {
+                        alert("success")
+                        $("#btn_sub").attr("disabled", false)
+                        return "redirect:https://localhost"
+                    },
+                    error: function (){
+                        $("#btn_sub").attr("disabled", false)
+                    }
+                })
+                // return "redirect:http://ebook.com"
+            },
+            error: function (resp) {
+                alert("error")
+                $("#btn_sub").attr("disabled", false)
+            }
+        })
+    }
+</script>
+<style type="text/css">
+
+    .rg_layout {
+        width: 900px;
+        height: 500px;
+        border: 8px solid #EEEEEE;
+        background-color: white;
+        margin-top: 65px;
+    }
+
+    .rg_left {
+        float: left;
+        margin: 15px;
+    }
+
+    .rg_center {
+        float: left;
+    }
+
+    .rg_right {
+        float: right;
+        margin: 15px;
+    }
+
+    .rg_left > p:first-child {
+        color: #FFD026;
+        font-size: 20px;
+    }
+
+    .rg_left > p:last-child {
+        color: #A6A6A6;
+        font-size: 20px;
+    }
+
+    .rg_right > p:first-child {
+        font-size: 15px;
+    }
+
+    .rg_right p a {
+        color: pink;
+    }
+
+    .td_left {
+        width: 300px;
+        height: 45px;
+        text-align: right;
+    }
+
+    .td_right {
+        padding-left: 50px;
+    }
+
+    #username, #password, #email, #nickname, #birthday, #code {
+        width: 251px;
+        height: 32px;
+        border: 1px solid #A6A6A6;
+        border-radius: 5px;
+        padding-left: 10px;
+    }
+
+    #btn_sub {
+        width: 150px;
+        height: 40px;
+        background-color: #FFD026;
+        border: 1px solid #FFD026;
+    }
+</style>
+</body>
+</html>

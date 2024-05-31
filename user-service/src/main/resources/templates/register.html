@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<!-- left side -->
+<div class="rg_left"><p>new user register</p>
+    <p>USER REGISTER</p>
+</div>
+<!--middle side-->
+<script th:src="@{/user/static/js/jquery-3.4.1.min.js}"></script>
+<script type="text/javascript" th:src="@{/user/static/js/moment.js}"></script>
+<script th:src="@{/user/static/js/bootstrap.min.js}"></script>
+<script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js }"></script>
+<link rel="stylesheet" th:href="@{/user/static/css/bootstrap.min.css}">
+<link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css}">
+<script></script>
+<div class="rg_center">
+    <!--     register form start-->
+    <form th:action="'javascript:submit();'" method="post" id="userForm" class="rg_layout">
+        <table>
+            <tr>
+                <td class="td_left"><label for="username">username</label></td>
+                <td class="td_right"><input type="text" name="username" id="username" placeholder="enter your username">
+                </td>
+            </tr>
+            <tr>
+                <td class="td_left"><label for="nickname">nickname</label></td>
+                <td class="td_right"><input type="text" name="nickname" id="nickname" placeholder="enter your nickname">
+                </td>
+            </tr>
+            <tr>
+                <td class="td_left"><label for="password">password</label></td>
+                <td class="td_right"><input type="password" name="password" id="password"
+                                            placeholder="enter your password"></td>
+            </tr>
+            <tr>
+                <td class="td_left" id="no_verify"><label>Are you a TEACHER or a STUDENT?</label></td>
+                <td class="td_right">
+                    <input type="radio" name="type" value="0">student
+                    <input type="radio" name="type" value="1">UofT Student
+                    <input type="radio" name="type" value="2">teacher
+                </td>
+            </tr>
+            <tr>
+                <td class="td_left" id="verify" hidden="true"><label>Student of UofT? Enter your UofT email to verify
+                    you</label></td>
+                <td class="td_left"><label for="email">Email</label></td>
+                <td class="td_right"><input type="email" name="email" id="email" placeholder="enter your email"></td>
+            </tr>
+            <tr id="verifyBtn">
+                <td class="td_left">
+                    <button type="button" class="btn btn-outline-info" id="sendCode">Send Code</button>
+                </td>
+                <td class="td_right"><input type="text" name="code" id="code" placeholder="verify code"></td>
+            </tr>
+            <tr>
+                <td class="td_left"><label>gender</label></td>
+                <td class="td_right"><input type="radio" name="gender" value="1"> male <input type="radio"
+                                                                                              name="gender"
+                                                                                              value="0"> female
+                </td>
+            </tr>
+            <tr>
+                <td class="td_left"><label for="birthday">birthday</label></td>
+                <td class="td_right">
+                    <div class='input-group date'>
+                        <input type="date" name="birthday" id="birthday">
+                        <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                                        </span>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" align="center"><input type="submit" id="btn_sub" value="register"></td>
+            </tr>
+        </table>
+    </form>
+    <!-- register form end-->
+    <!-- right side -->
+    <div class="rg_right ">
+        <p>have an account already？<a href="https://localhost/user/login">login now</a>
+        </p>
+    </div>
+</div>
+<script type="text/javascript">
+    window.onload = function () {
+        $(function () {
+            $(document).ajaxStop(function () {
+                $('#birthday').datetimepicker({
+                    format: 'YYYY-MM-DD'
+                });
+            })
+        })
+        $(function () {
+            $.ajax({
+                url: "https://localhost/rest/user/verify",
+                type: "GET",
+                success: function () {
+                    return "redirect:/index"
+                }
+            })
+        });
+
+        $(function () {
+            $("#sendCode").click(function () {
+                if ($("#sendCode").hasClass("btn btn-secondary disabled")) {
+                    return
+                }
+                if ($('input[name="type"]:eq(1)').checked && !$("#email").val().endsWith("mail.utoronto.ca")) {
+                    alert("not a valid UofT email address!")
+                    return
+                }
+                $("#sendCode").attr("class", "btn btn-secondary")
+                $("#sendCode").attr("aria-disabled", "true")
+                //send code
+                $.get("https://localhost/rest/user/auth/sendCode?mail=" + $("#email").val(), function (data) {
+                    console.log(data)
+                    if (data.success) {
+                        let date = new Date();
+                        let saveTime = 5;
+                        date.setTime(date.getTime() + saveTime * 1000 * 60);
+                        document.cookie("code="+data.code+"; expire=" + date.toGMTString());
+                        //TODO add a toast use Bootstrap
+                        alert("code has been sent to your email")
+                    }
+
+                })
+                timeoutChangeStyle();
+            })
+        });
+    }
+</script>
+<script type="text/javascript">
+    var countDown = 60
+
+    function timeoutChangeStyle() {
+        if (countDown == 0) {
+            $("#sendCode").text("send code")
+            $("#sendCode").removeClass("btn btn-secondary disabled")
+            $("#sendCode").removeAttr("aria-disabled")
+            $("#sendCode").attr("class", "btn btn-outline-info")
+            return
+        }
+        var str = countDown + "s";
+        $("#sendCode").text(str);
+        countDown--;
+        setTimeout("timeoutChangeStyle()", 1000);
+    }
+
+    function submit() {
+        var formObj = {}
+        $.each($("#userForm").serializeArray(), function (i, item) {
+            formObj[item.name] = item.value
+        })
+        $.ajax({
+            type: "post",
+            url: "/rest/user/auth/register",
+            data: JSON.stringify(formObj),
+            dataType: "json",
+            contentType: "application/json",
+            success: function (resp) {
+                return "redirect:https://localhost"
+                // return "redirect:http://ebook.com"
+            },
+            error: function (resp) {
+                //TODO add a toast use Bootstrap
+                alert(resp)
+            }
+        })
+    }
+</script>
+<style type="text/css">
+    body {
+        background: url("img/x.png");
+    }
+
+    .rg_layout {
+        width: 900px;
+        height: 500px;
+        border: 8px solid #EEEEEE;
+        background-color: white;
+        margin-top: 65px;
+    }
+
+    .rg_left {
+        float: left;
+        margin: 15px;
+    }
+
+    .rg_center {
+        float: left;
+    }
+
+    .rg_right {
+        float: right;
+        margin: 15px;
+    }
+
+    .rg_left > p:first-child {
+        color: #FFD026;
+        font-size: 20px;
+    }
+
+    .rg_left > p:last-child {
+        color: #A6A6A6;
+        font-size: 20px;
+    }
+
+    .rg_right > p:first-child {
+        font-size: 15px;
+    }
+
+    .rg_right p a {
+        color: pink;
+    }
+
+    .td_left {
+        width: 300px;
+        height: 45px;
+        text-align: right;
+    }
+
+    .td_right {
+        padding-left: 50px;
+    }
+
+    #username, #password, #email, #nickname, #birthday, #code {
+        width: 251px;
+        height: 32px;
+        border: 1px solid #A6A6A6;
+        border-radius: 5px;
+        padding-left: 10px;
+    }
+
+    #btn_sub {
+        width: 150px;
+        height: 40px;
+        background-color: #FFD026;
+        border: 1px solid #FFD026;
+    }
+</style>
+</body>
+</html>
