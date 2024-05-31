@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ebook.book.dao.BookSectionDao">
+    <select id="selectTopSectionVo" parameterType="java.lang.Integer" resultType="com.ebook.book.entity.vo.SectionVo">
+        select section_id, count(*) count
+        from ebook.book_section
+        where is_deleted=0
+        group by section_id
+        order by count desc
+        limit #{count};
+    </select>
+</mapper>

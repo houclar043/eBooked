@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>READ</title>
+</head>
+<body>
+<script th:src="@{/user/static/js/jquery-3.4.1.min.js}"></script>
+<script th:src="@{/user/static/js/pdfobject.js}"></script>
+<script th:src="@{/user/static/js/bootstrap.min.js}"></script>
+<link rel="stylesheet" th:href="@{/user/static/css/bootstrap.min.css}">
+<div hidden="hidden" id="source" th:source="${book.source}"></div>
+<div hidden="hidden" id="bookId" th:bookId="${book.id}"></div>
+<div id="container">
+</div>
+<script type="text/javascript">
+    PDFObject.embed($("#source").attr("source"), "#container");
+
+    // 0 : approve
+    // 1 : deny
+    function confirm(type){
+        if(type === 0){
+            $("#type").attr("type", 0)
+            $("#modalContent").text("I confirm and approve this document can be set to show to public.")
+        }else{
+            $("#type").attr("type", 1)
+            $("#modalContent").text("I confirm and deny this document since it contains inappropriate content.")
+        }
+        $("#confirmModal").modal('show')
+    }
+    let isApproved = $("#type").attr("type") === 0
+    let hashKey = $("#hashKey").attr("hashKey")
+    let bookId = $("#bookId").attr("bookId")
+    function sendRequest(){
+        $.ajax({
+            url: "https://localhost/rest/user/reviewResult",
+            type: "POST",
+            data: JSON.stringify({isApproved, hashKey, bookId}),
+            contentType: "application/json",
+            success: function () {
+                alert("success")
+                window.location.href = "https://localhost/user/page/profile"
+            }
+        })
+    }
+</script>
+<style type="text/css">
+    .pdfobject-container { height: 40rem; border: 1rem solid rgba(0,0,0,.1); }
+</style>
+</body>
+</html

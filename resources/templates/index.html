@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EBook</title>
+    <style type="text/css">
+        .clear {
+            clear: both;
+        }
+
+        .top_left {
+            width: 300px;
+            margin-top: 15px;
+            margin-left: 15px;
+            float: left;
+        }
+
+        #top_right {
+            width: 200px;
+            float: right;
+            margin-top: 15px;
+            font-size: 15px;
+        }
+
+        #top_right img {
+            margin-bottom: -5px;
+        }
+
+        #top_right a {
+            text-decoration: none;
+            color: #06F;
+        }
+
+        #top_right a:hover {
+            color: #909;
+        }
+
+        #menu a {
+            margin: 0 8px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        #menu a:hover {
+            color: #999;
+        }
+
+        #menu .all {
+            color: yellow
+        }
+
+        #search {
+            background-color: #B6B684;
+            padding: 7px 0;
+            text-align: right;
+
+        }
+
+        #search input[type='image'] {
+            /* margin-top: 5px; */
+            margin-right: 250px;
+            margin-bottom: -4px;
+        }
+
+        #search input[type='text'] {
+            height: 16px;
+            border: 1px solid #999;
+        }
+
+        /*-------------------------------------------------------*/
+
+        #content {
+            width: 900px;
+            margin: 8px auto 15px;
+        }
+
+        #content_bottom h1 {
+            font-size: 15px;
+            display: inline;
+        }
+
+        #content_bottom span {
+            font-size: 13px;
+        }
+
+        #productlist_img img {
+            width: 100%;
+        }
+
+        .bookimg img {
+            width: 130px;
+            height: 196px;
+        }
+
+        #jumpPage a {
+            padding: 2px 6px;
+            border: 1px solid #9AAFE5;
+            text-decoration: none;
+            color: #9AAFE5;
+        }
+
+        #jumpPage a:hover {
+            color: #2B66A5;
+            border: 1px solid #2B66A5;
+        }
+    </style>
+</head>
+<body>
+<script type="text/javascript" th:src="@{/book/static/js/jquery-3.4.1.min.js}"></script>
+<link th:href="@{/book/static/css/bootstrap.min.css}" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" th:src="@{/book/static/js/bootstrap.min.js}"></script>
+<link th:href="@{/book/static/blog.css}" rel="stylesheet">
+<link th:href="@{/book/static/headers.css}" rel="stylesheet">
+<script type="text/javascript" th:src="@{/book/static/bootstrap.bundle.min.js}"></script>
+<link href="https://fonts.googleapis.com/css?family=Playfair&#43;Display:700,900&amp;display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet"/>
+<link th:href="@{/book/static/css/all.css}" rel="stylesheet"/>
+<link th:href="@{/book/static/css/solid.css}" rel="stylesheet"/>
+<div id="page">
+    <div id="top">
+        <div class="top_left" th:if="${user != null}">
+            welcome, [[${user.nickname}]]  <i class="fas fa-user"></i>
+
+        </div>
+        <div class="top_left" th:if="${user == null}">
+            <a class="btn btn-sm btn-outline-secondary" href="https://localhost/user/login">Log in/ Sign up         <i class="fas fa-user"></i>
+            </a>
+        </div>
+        <div id="top_right">
+            <button class="btn btn-outline-dark" type="submit"
+                    onclick="window.location.href='https://localhost/order/cartList'">
+                <i class="bi-cart-fill me-1"></i>
+                Cart
+                <span class="badge bg-dark text-white ms-1 rounded-pill">[[${cartCount}]]</span>
+            </button>
+            <button type="button" class="btn btn-outline-secondary position-relative">
+                <i class="fas fa-envelope"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" th:if="${message != 0}">
+    [[${message}]]
+    <span class="visually-hidden">unread messages</span>
+  </span>
+            </button>
+        </div>
+    </div>
+    <div class="clear"></div>
+    <header class="p-3 mb-3 border-bottom">
+        <div class="container">
+            <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+                <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-dark text-decoration-none">
+                    <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap">
+                        <use xlink:href="#bootstrap"/>
+                    </svg>
+                </a>
+
+                <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+                    <li><a href="#" th:onclick="'javascript:getDataList(0, 1, -1);'" class="nav-link px-2 link-secondary" id="section-1">Show All</a></li>
+                    <li th:each="section: ${sectionList}"><a th:id="'section'+${section.sectionId}" href="#" th:onclick="'javascript:getDataList(0, 1,'+${section.sectionId}+');'"
+                                                             class="nav-link px-2 link-dark">[[${section.sectionName}]]</a></li>
+                    <li><a href="https://localhost/book/topRate" class="nav-link px-2 link-secondary" id="section-1">Recommend</a></li>
+                </ul>
+
+                <form class="d-flex">
+                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" id="keyword">
+                    <button class="btn btn-outline-success" type="submit" onclick="getDataList(0, 1)"><i class="fas fa-search"></i></button>
+                </form>
+
+                <div class="dropdown text-end" th:if="${user != null}">
+                    <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser1"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <img th:src="${user.avatar}" alt="avatar" width="32" height="32" class="rounded-circle">
+                    </a>
+                    <ul class="dropdown-menu text-small" aria-labelledby="dropdownUser1">
+                        <li><a class="dropdown-item" href="https://localhost/user/profile/upload">Upload File</a></li>
+                        <li><a class="dropdown-item" href="https://localhost/user/page/profile">Profile</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="https://localhost/user/logout">Log out</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </header>
+    <div id="content">
+        <ul class="nav nav-tabs justify-content-center">
+            <li class="nav-item">
+                <a class="nav-link active" id="bookBtn" aria-current="page" th:onclick="'javascript:getDataList(0, 1);'"
+                   href="javascript:void(0)"><i class="fas fa-file"></i> Document</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="userBtn" th:onclick="'javascript:getDataList(1, 1);'" href="#"><i class="fas fa-users"></i>  People</a>
+            </li>
+        </ul>
+        <br/>
+        <div th:if="${bookPage} != null" id="bookList" th:fragment="bookList">
+            <div class="row mb-2" >
+                <div class="col-md-6" th:each="book :${bookPage.records}">
+                    <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+                        <div class="col p-4 d-flex flex-column position-static">
+                            <strong class="d-inline-block mb-2 text-primary">[[${book.publisher}]]</strong>
+                            <h5 class="mb-0">[[${book.title}]]</h5>
+                            <div class="mb-1 text-muted">[[${book.author}]]</div>
+                            <p class="card-text mb-auto" th:if="${book.description} != null">[[${book.description}]]</p>
+                            <a th:href="'https://localhost/book/item/detail/'+${book.id}" class="stretched-link">Continue reading</a>
+                        </div>
+                        <div class="col-auto d-none d-lg-block">
+                            <img class="bd-placeholder-img" th:src="${book.cover}" width="200" height="250" alt="">
+<!--                            <svg class="bd-placeholder-img" width="200" height="250" xmlns="http://www.w3.org/2000/svg"-->
+<!--                                 role="img" th:src="${book.cover}" preserveAspectRatio="xMidYMid slice"-->
+<!--                                 focusable="false"><title>Placeholder</title>-->
+<!--                                <rect width="100%" height="100%" fill="#55595c"/>-->
+<!--                                <text x="50%" y="50%" fill="#eceeef" dy=".3em">Thumbnail</text>-->
+<!--                            </svg>-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <nav aria-label="Page navigation example">
+                <ul class="pagination justify-content-center">
+                    <li th:class="${bookPage.hasPrevious()} ? 'page-item' : 'page-item disabled'">
+                        <a class="page-link" href="#" th:onclick="'javascript:getDataList(0,'+ ${bookPage.getCurrent()-1} + ');'">Previous</a>
+                    </li>
+                    <li class="page-item"><a class="page-link" href="#"
+                                             id="bookCurrent">[[${bookPage.getCurrent()}]]</a></li>
+                    <li th:class="${bookPage.hasNext()} ? 'page-item' : 'page-item disabled'">
+                        <a class="page-link" href="#" th:onclick="'javascript:getDataList(0,'+ ${bookPage.getCurrent()+1} + ');'">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <div hidden="true" id="userList" th:if="${userPage != null}" th:fragment="userList">
+            <div class="my-3 p-3 bg-body rounded shadow-sm">
+                <h6 class="border-bottom pb-2 mb-0">Suggestions</h6>
+                <div class="d-flex text-muted pt-3" th:each="user1: ${userPage.records}">
+                    <svg class="bd-placeholder-img flex-shrink-0 me-2 rounded" width="32" height="32" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: 32x32" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#007bff"/><text x="50%" y="50%" fill="#007bff" dy=".3em">32x32</text></svg>
+
+                    <div class="pb-3 mb-0 small lh-sm border-bottom w-100">
+                        <div class="d-flex justify-content-between">
+                            <strong class="text-gray-dark">[[${user1.nickname}]]</strong>
+                            <a th:href="'https://localhost/user/page/profile/public/'+${user1.id}">Profile</a>
+                        </div>
+                        <span class="d-block">@[[${user1.username}]]</span>
+                    </div>
+                </div>
+                <small class="d-block text-end mt-3">
+                    <a href="#">All suggestions</a>
+                </small>
+            </div>
+            <nav aria-label="Page navigation example">
+                <ul class="pagination justify-content-center">
+                    <li th:class="${userPage.hasPrevious()} ? 'page-item' : 'page-item disabled'">
+                        <a class="page-link" href="#" th:onclick="'javascript:getDataList(1,'+ ${userPage.getCurrent()-1} + ');'">Previous</a>
+                    </li>
+                    <li class="page-item"><a class="page-link" href="#"
+                                             id="userCurrent">[[${userPage.getCurrent()}]]</a></li>
+                    <li class="page-item" th:class="${userPage.hasNext()} ? 'page-item' : 'page-item disabled'">
+                        <a class="page-link" href="#" th:onclick="'javascript:getDataList(1,'+ ${userPage.getCurrent()+1} + ');'">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+    </div>
+    <footer class="blog-footer">
+        <p>EBook</p>
+        <p>
+            <a href="#">Back to top</a>
+        </p>
+    </footer>
+</div>
+<script type="text/javascript">
+    //0: bookList, 1: userList
+    function getDataList(type, page, sectionId) {
+        var queryVo = collectQueryVo(page)
+        if(sectionId != null){
+            $(".link-secondary").removeClass("link-secondary").addClass("link-dark")
+            $("#section"+sectionId).removeClass("link-dark").addClass("link-secondary").attr("sid", sectionId)
+            queryVo["sectionId"] = sectionId == -1 ? null : sectionId
+        }
+        console.log(queryVo)
+        queryVo.getUserList = type != 0
+        if(type === 1){
+            $("#bookList").hide()
+            $("#userList").show()
+            $("#userBtn").addClass("active")
+            $("#bookBtn").removeClass("active")
+        }else{
+            $("#bookBtn").addClass("active")
+            $("#userBtn").removeClass("active")
+            $("#userList").hide()
+        }
+        $.ajax({
+            type: "post",
+            url: "/book/getDataList",
+            contentType: "application/json",
+            data: JSON.stringify(queryVo),
+            success:function (data) {
+                if(type == 1){
+                    $("#userList").replaceWith(data)
+                    $("#userList").removeAttr("hidden")
+                }else{
+                    console.log(data)
+                    $("#bookList").replaceWith(data)
+                    $("#bookList").show()
+                }
+            }
+        })
+    }
+
+    function collectQueryVo(page) {
+        var queryVo = {}
+        queryVo["keyword"] = $("#keyword").val()
+        queryVo["page"] = page
+        var sid = parseInt($(".link-secondary").attr("sid"))
+        queryVo["sectionId"] = sid == -1 ? null : sid
+        return queryVo
+    }
+</script>
+</body>
+</html>

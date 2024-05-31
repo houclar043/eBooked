@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ebook.book.dao.CommentDao">
+    <select id="getParentComment" parameterType="java.lang.Long" resultType="com.ebook.book.entity.Comment">
+        SELECT * FROM ebook.comment
+        where pid="-1" and book_id=#{bookId}
+        order by create_time desc
+    </select>
+</mapper>

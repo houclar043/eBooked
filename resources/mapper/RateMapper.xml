@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ebook.book.dao.RateDao">
+    <select id="selectAvgRate" resultType="java.util.List">
+        SELECT book_id, format(round(avg(rate), 1), 1) avgRate, count(book_id) rateCount
+        from rate
+        group by book_id
+    </select>
+    <select id="selectAvgRateByBookId" parameterType="java.lang.Long" resultType="com.ebook.book.entity.vo.BookDetailVo">
+        SELECT book_id, format(round(avg(rate), 1), 1) avgRate, count(book_id) rateCount
+        from rate
+        where book_id=#{boodId}
+    </select>
+</mapper>
