@@ -1,0 +1,26 @@
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: main_page_route
+          uri: lb://book-service
+          predicates:
+            - Path=/, /index, /noAuthority
+          filters:
+            - RewritePath=/book, /book/index, /book/noAuthority
+        - id: user_route
+          uri: lb://user-service
+          predicates:
+            - Path=/user/**, /rest/user/**
+        - id: book_route
+          uri: lb://book-service
+          predicates:
+            - Path=/book/**, /rest/book/**
+        - id: order_route
+          uri: lb://order-service
+          predicates:
+            - Path=/order/**, /rest/order/**
