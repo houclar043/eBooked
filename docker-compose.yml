@@ -1,0 +1,80 @@
+version: "3.2"
+services:
+  mysql:
+    image: mysql:8
+    networks:
+      - ebook
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_HOST: "%"
+      TZ: Asia/Shanghai
+    command:
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_general_ci
+      --explicit_defaults_for_timestamp=true
+      --lower_case_table_names=1
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/conf:/etc/mysql/conf.d/
+      - ./ebook/:/docker-entrypoint-initdb.d/
+    ports:
+      - "3306:3306"
+  redis:
+    image: redis
+    networks:
+      - ebook
+    ports:
+      - "6379:6379"
+    command:
+      - redis-server --appendonly yes
+    volumes:
+      - "$PWD/redis:/data"
+  eureka-service:
+    networks:
+      - ebook
+    build: ./eureka-service
+  gateway-service:
+    networks:
+      - ebook
+    depends_on:
+      - eureka-service
+    build: ./gateway-service
+  book-service:
+    networks:
+      - ebook
+    depends_on:
+      - eureka-service
+      - gateway-service
+      - mysql
+      - redis
+    build: ./book-service
+  user-service:
+    networks:
+      - ebook
+    depends_on:
+      - eureka-service
+      - gateway-service
+      - mysql
+      - redis
+    build: ./user-service
+  order-service:
+    networks:
+      - ebook
+    depends_on:
+      - eureka-service
+      - gateway-service
+      - mysql
+      - redis
+    build: ./order-service
+  thirdparty-service:
+    networks:
+      - ebook
+    depends_on:
+      - eureka-service
+      - gateway-service
+      - mysql
+      - redis
+    build: ./thirdparty-service
+networks:
+  ebook:
