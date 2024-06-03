@@ -1,0 +1,20 @@
+{
+	"Comment":{
+		"id":"test",
+		"pid":"test",
+		"bookId":1,
+		"userId":1,
+		"replyToId":1,
+		"nickname":"test",
+		"avatar":"test",
+		"content":"test",
+		"isDeleted":"test",
+		"createTime":1666558073615,
+		"child":[
+			{
+			}
+		],
+		"jsonString":"test",
+		"replyTo":"test"
+	}
+}
